@@ -18,12 +18,16 @@
 *************************************************************************/
 
 #include "MazeWindow.h"
+#include<iostream>
 #include <Fl/math.h>
 #include <Fl/gl.h>
 #include <GL/glu.h>
 #include <stdio.h>
-
-
+#include<glm/mat4x4.hpp>
+#include<glm/matrix.hpp>
+#include<glm/vec3.hpp>
+#include<glm/geometric.hpp>
+using namespace std;
 //*************************************************************************
 //
 // * Constructor
@@ -55,8 +59,55 @@ Set_Maze(Maze *m)
 	// Force a redraw
 	redraw();
 }
+void Perspective(const float& angleOfView, const float& imageAspectRatio, const float& n, const float& f) {
+	float r, t, b,l;
+	float scale = tan(angleOfView * 0.5 * M_PI / 180) * n;
+	r = imageAspectRatio * scale, l = -r;
+	t = scale, b = -t;
+	GLdouble matrix[16] = { 0 };
+	matrix[0] = 2 * n / (r - l);
+	matrix[5] = 2 * n / (t - b);
+	matrix[8] = (r + l) / (r - l);
+	matrix[9] = (t + b) / (t - b);
+	matrix[10] = -(f + n) / (f - n);
+	matrix[11] = -1;
+	matrix[14] = -(2*f * n) / (f - n);
+	glLoadMatrixd(matrix);
+}
 
+void LookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez,
+	GLdouble centerx, GLdouble centery, GLdouble centerz,
+	GLdouble upx, GLdouble upy, GLdouble upz) {
+	GLdouble matrix[16] = { 0 };
 
+	glm::vec3 eyes,at,ups,x,y,z,temp;
+	eyes[0] = eyex;eyes[1] = eyey;eyes[2] = eyez;
+	at[0] = centerx;at[1] = centery;at[2] = centerz;
+	ups[0] = upx;ups[1] = upy;ups[2] = upz;
+	temp[0] = 0;temp[1] = 1;temp[2] = 0;
+
+	z = glm::normalize(at - eyes);
+	x = glm::normalize(glm::cross(ups, z));
+	y = glm::cross(z, x);
+
+	matrix[0] = x[0];
+	matrix[1] = y[0];
+	matrix[2] = z[0];
+	matrix[3] = 0;
+	matrix[4] = x[1];
+	matrix[5] = y[1];
+	matrix[6] = z[1];
+	matrix[7] = 0;
+	matrix[8] = x[2];
+	matrix[9] = y[2];
+	matrix[10] = z[2];
+	matrix[11] = 0;
+	matrix[12] = glm::dot(x,-eyes);
+	matrix[13] = glm::dot(y, -eyes);
+	matrix[14] = glm::dot(z, -eyes);
+	matrix[15] = 1;
+	glLoadMatrixd(matrix);
+}
 //*************************************************************************
 //
 // * draw() method invoked whenever the view changes or the window
@@ -84,7 +135,10 @@ draw(void)
 
 	// Clear the screen.
 	glClear(GL_COLOR_BUFFER_BIT);
-
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 	glBegin(GL_QUADS);
 		// Draw the "floor". It is an infinite plane perpendicular to
 		// vertical, so we know it projects to cover the entire bottom
@@ -103,21 +157,53 @@ draw(void)
 		glVertex2f(-w() * 0.5f,  h() * 0.5f);
 		glVertex2f(-w() * 0.5f, 0.0       );
 		glVertex2f( w() * 0.5f, 0.0       );
+
+		
+
 	glEnd();
 
 
 	if ( maze ) {
-		// Set the focal length. We can do this because we know the
-		// field of view and the size of the image in view space. Note
-		// the static member function of the Maze class for converting
-		// radians to degrees. There is also one defined for going backwards.
-		focal_length = w()
-						 / (float)(2.0*tan(Maze::To_Radians(maze->viewer_fov)*0.5));
-	
+		/*
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glm::mat4x4 Mproj;
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				Mproj[i][j]=0;
+			}
+		}
+		setProjectionMatrix(maze->viewer_fov, 0.001, 200, Mproj);
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				cout << Mproj[i][j]<<" ";
+			}
+			cout << endl;
+		}*/
+
+		focal_length = w()/ (float)(2.0*tan(Maze::To_Radians(maze->viewer_fov)*0.5));
 		// Draw the 3D view of the maze (the visible walls.) You write this.
 		// Note that all the information that is required to do the
 		// transformations and projection is contained in the Maze class,
 		// plus the focal length.
+
+		//Perspective
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		float aspect = (float)w() / h();
+		Perspective(maze->viewer_fov,aspect,0.001, 200);
+
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		float viewer_pos[3] = { maze->viewer_posn[Maze::Y],0.0f,maze->viewer_posn[Maze::X] };
+		gluLookAt(viewer_pos[Maze::X], viewer_pos[Maze::Y], viewer_pos[Maze::Z],
+			viewer_pos[Maze::X] + sin(Maze::To_Radians(maze->viewer_dir)),
+			viewer_pos[Maze::Y],
+			viewer_pos[Maze::Z] + cos(Maze::To_Radians(maze->viewer_dir)),
+			0.0, 1.0, 0.0);
+
 		maze->Draw_View(focal_length);
 	}
 }

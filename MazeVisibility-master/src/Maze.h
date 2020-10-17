@@ -19,6 +19,7 @@
 #ifndef _MAZE_H_
 #define _MAZE_H_
 
+#include <GL/glu.h>
 #include <FL/math.h> // Use FLTK's math header because it defines M_PI
 #include "Cell.h"
 
@@ -94,6 +95,7 @@ class Maze {
 		// minimum and maximum corners of the window in which to draw.
 		void	Draw_Frustum(int, int, int, int);
 
+		void Draw_Wall(float start[2], float end[2], float color[3]);
 		// Draws the first-person view of the maze. It is passed the focal distance.
 		// THIS IS THE FUINCTION YOU SHOULD MODIFY.
 		void	Draw_View(const float);
