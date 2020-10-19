@@ -19,7 +19,7 @@
 
 #include "MazeWindow.h"
 
-glm::mat4x4 mvpp;
+glm::mat4x4 mvp;
 //*************************************************************************
 //
 // * Constructor
@@ -64,10 +64,10 @@ void Perspective(const float& angleOfView, const float& imageAspectRatio, const 
 	matrix[10] = -(f + n) / (f - n);
 	matrix[11] = -1;
 	matrix[14] = -(2*f * n) / (f - n);
-	
 	for (int i = 0; i < 16; i++) {
-		mvpp[i / 4][i % 4] = matrix[i];
+		mvp[i / 4][i % 4] = matrix[i];
 	}
+	
 	glLoadMatrixd(matrix);
 }
 
@@ -82,7 +82,7 @@ void LookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez,
 	ups[0] = upx;ups[1] = upy;ups[2] = upz;
 	temp[0] = 0;temp[1] = 1;temp[2] = 0;
 
-	z = glm::normalize(at - eyes);
+	z = glm::normalize(eyes- at);
 	x = glm::normalize(glm::cross(ups, z));
 	y = glm::cross(z, x);
 
@@ -98,12 +98,19 @@ void LookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez,
 	matrix[9] = y[2];
 	matrix[10] = z[2];
 	matrix[11] = 0;
-	matrix[12] = glm::dot(x,-eyes);
-	matrix[13] = glm::dot(y, -eyes);
-	matrix[14] = glm::dot(z, -eyes);
+	matrix[12] =-1* glm::dot(x,eyes);
+	matrix[13] =-1* glm::dot(y,eyes);
+	matrix[14] =-1* glm::dot(z, eyes);
 	matrix[15] = 1;
-	for (int i = 0; i < 16; i++) {
-		mvpp[i / 4][i % 4] *= matrix[i];
+
+	glm::mat4x4 tmp = mvp;
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			mvp[i][j] = 0;
+			for (int k = 0; k < 4; k++) {
+				mvp[i][j] += tmp[i][k] * matrix[k*4+j];
+			}
+		}
 	}
 	glLoadMatrixd(matrix);
 }
@@ -187,12 +194,10 @@ draw(void)
 		// transformations and projection is contained in the Maze class,
 		// plus the focal length.
 
-		//Perspective
-		glClear(GL_DEPTH_BUFFER_BIT);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		float aspect = (float)w() / h();
-		Perspective(maze->viewer_fov,aspect,0.001, 200);
+		Perspective(maze->viewer_fov,aspect,0.01, 200);
 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -203,7 +208,7 @@ draw(void)
 			viewer_pos[Maze::Z] + cos(Maze::To_Radians(maze->viewer_dir)),
 			0.0, 1.0, 0.0);
 
-		maze->Draw_View(focal_length,mvpp);
+		maze->Draw_View(focal_length);
 	}
 }
 

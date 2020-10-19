@@ -32,8 +32,7 @@ const char Maze::Y = 1;
 const char Maze::Z = 2;
 const float Maze::BUFFER = 0.1f;
 
-glm::mat4x4 mvp;
-
+extern glm::mat4x4 mvp;
 //**********************************************************************
 //
 // * Constructor for the maze exception
@@ -629,45 +628,48 @@ Draw_Map(int min_x, int min_y, int max_x, int max_y)
 //======================================================================
 void Maze::
 Draw_Wall(float start[2], float end[2], float color[3]) {
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			cout << mvp[i][j] << " ";
-		}
-		cout << endl;
-	}
+	
+	
 	float edge0[3] = { start[Y],0.0f,start[X] };
 	float edge1[3] = { end[Y],0.0f,end[X] };
-	glm::vec4 v1, v2, v3, v4, tmp;
-	v1 = { edge0[X],1.0f,edge0[Z],1 };
-	v1 = mvp * v1;
-	v1 = { v1[0] /abs(v1[3]),v1[1] / abs(v1[3]),v1[2] / abs(v1[3]),1 };
+	glm::vec4 v1, v2, v3, v4, temp;
+	temp = { edge0[X],1.0f,edge0[Z],1 };
+	v1 = mvp * temp;
+	temp = { edge1[X],1.0f,edge1[Z],1 };
+	v2 = mvp * temp;
+	temp = { edge1[X],-1.0f,edge1[Z],1 };
+	v3 = mvp * temp;
+	temp = { edge0[X],-1.0f,edge0[Z],1 };
+	v4 = mvp * temp;
 
-	v2 = { edge1[X],1.0f,edge1[Z],1 };
-	v2 = mvp * v1;
-	v2 = { v2[0] / abs(v2[3]),v2[1] / abs(v2[3]),v2[2] / abs(v2[3]),1 };
-
-	v3 = { edge1[X],-1.0f,edge1[Z],1 };
-	v3 = mvp * v1;
-	v3 = { v3[0] / abs(v3[3]),v3[1] / abs(v3[3]),v3[2] / abs(v3[3]),1 };
-
-	v4 = { edge0[X],-1.0f,edge0[Z],1 };
-	v4 = mvp * v1;
-	v4 = { v4[0] / abs(v4[3]),v4[1] / abs(v4[3]),v4[2] / abs(v4[3]),1 };
 	glBegin(GL_POLYGON);
 	glColor3fv(color);
+	/*
 	glVertex2f(v1[0],v1[1]);
 	glVertex2f(v2[0], v2[1]);
 	glVertex2f(v3[0], v3[1]);
 	glVertex2f(v4[0], v4[1]);
-	glEnd();
+	*/
+	glVertex4f(v1[0], v1[1], v1[2], v1[3]);
+	glVertex4f(v2[0], v2[1], v2[2], v2[3]);
+	glVertex4f(v3[0], v3[1], v3[2], v2[3]);
+	glVertex4f(v4[0], v4[1], v4[2], v4[3]);
+	
+	
+	/*
+	glBegin(GL_POLYGON);
+	glColor3fv(color);
+	glVertex3f(edge0[X],1.0f,edge0[Z]);
+	glVertex3f(edge1[X], 1.0f, edge1[Z]);
+	glVertex3f(edge1[X], -1.0f, edge1[Z]);
+	glVertex3f(edge0[X], -1.0f, edge0[Z]);
+	glEnd(); */
 }
 void Maze::
-Draw_View(const float focal_dist,glm::mat4x4 mvpp)
+Draw_View(const float focal_dist)
 //======================================================================
 {
-	mvp = mvpp;
 	glClear(GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_DEPTH_TEST);
 	for (int i = 0; i < (int)this->num_edges; i++) {
 		float edge_start[2] = {
 			this->edges[i]->endpoints[Edge::START]->posn[Vertex::X],
@@ -677,7 +679,10 @@ Draw_View(const float focal_dist,glm::mat4x4 mvpp)
 			this->edges[i]->endpoints[Edge::END]->posn[Vertex::X],
 			this->edges[i]->endpoints[Edge::END]->posn[Vertex::Y]
 		};
-
+		cout << this->edges[i]->endpoints[Edge::START]->posn[Vertex::X] << endl;
+		cout << this->edges[i]->endpoints[Edge::START]->posn[Vertex::Y] << endl;
+		cout << this->edges[i]->endpoints[Edge::END]->posn[Vertex::X] << endl;
+		cout << this->edges[i]->endpoints[Edge::END]->posn[Vertex::X] << endl;
 		float color[3] = { this->edges[i]->color[0],this->edges[i]->color[1],this->edges[i]->color[2] };
 		if (this->edges[i]->opaque) {
 			Draw_Wall(edge_start, edge_end, color);
