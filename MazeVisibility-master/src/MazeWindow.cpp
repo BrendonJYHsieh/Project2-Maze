@@ -18,16 +18,8 @@
 *************************************************************************/
 
 #include "MazeWindow.h"
-#include<iostream>
-#include <Fl/math.h>
-#include <Fl/gl.h>
-#include <GL/glu.h>
-#include <stdio.h>
-#include<glm/mat4x4.hpp>
-#include<glm/matrix.hpp>
-#include<glm/vec3.hpp>
-#include<glm/geometric.hpp>
-using namespace std;
+
+
 //*************************************************************************
 //
 // * Constructor

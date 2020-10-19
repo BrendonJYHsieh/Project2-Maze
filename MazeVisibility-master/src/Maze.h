@@ -20,8 +20,16 @@
 #define _MAZE_H_
 
 #include <GL/glu.h>
+#include <Fl/gl.h>
 #include <FL/math.h> // Use FLTK's math header because it defines M_PI
+#include <stdio.h>
 #include "Cell.h"
+#include<glm/mat4x4.hpp>
+#include<glm/matrix.hpp>
+#include<glm/vec3.hpp>
+#include<glm/geometric.hpp>
+#include<iostream>
+using namespace std;
 
 //************************************************************************
 //
