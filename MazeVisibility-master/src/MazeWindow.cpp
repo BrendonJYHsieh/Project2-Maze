@@ -74,8 +74,8 @@ void Perspective(const float& angleOfView, const float& imageAspectRatio, const 
 void LookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez,
 	GLdouble centerx, GLdouble centery, GLdouble centerz,
 	GLdouble upx, GLdouble upy, GLdouble upz) {
-	GLdouble matrix[16] = { 0 };
-
+	GLdouble matrix1[16] = { 0 };
+	glm::mat4x4 matrix;
 	glm::vec3 eyes,at,ups,x,y,z,temp;
 	eyes[0] = eyex;eyes[1] = eyey;eyes[2] = eyez;
 	at[0] = centerx;at[1] = centery;at[2] = centerz;
@@ -86,6 +86,23 @@ void LookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez,
 	x = glm::normalize(glm::cross(ups, z));
 	y = glm::cross(z, x);
 
+	matrix[0][0] = x[0];
+	matrix[1][0] = x[1];
+	matrix[2][0] = x[2];
+	matrix[0][1] = y[0];
+	matrix[1][1] = y[1];
+	matrix[2][1] = y[2];
+	matrix[0][2] = z[0];
+	matrix[1][2] = z[1];
+	matrix[2][2] = z[2];
+	matrix[3][0] = -1 * glm::dot(x, eyes);
+	matrix[3][1] = -1 * glm::dot(y, eyes);
+	matrix[3][2] = -1 * glm::dot(z, eyes);
+	matrix[0][3] = 0;
+	matrix[1][3] = 0;
+	matrix[2][3] = 0;
+	matrix[3][3] = 1;
+	/*
 	matrix[0] = x[0];
 	matrix[1] = y[0];
 	matrix[2] = z[0];
@@ -101,18 +118,19 @@ void LookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez,
 	matrix[12] =-1* glm::dot(x,eyes);
 	matrix[13] =-1* glm::dot(y,eyes);
 	matrix[14] =-1* glm::dot(z, eyes);
-	matrix[15] = 1;
+	matrix[15] = 1;*/
 
 	glm::mat4x4 tmp = mvp;
+	mvp= tmp * matrix;
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			mvp[i][j] = 0;
-			for (int k = 0; k < 4; k++) {
-				mvp[i][j] += tmp[i][k] * matrix[k*4+j];
-			}
+			cout << mvp[i][j] << " ";
+			matrix1[i * 4 + j] = matrix[i][j];
 		}
+		cout << endl;
+		
 	}
-	glLoadMatrixd(matrix);
+	glLoadMatrixd(matrix1);
 }
 //*************************************************************************
 //
@@ -189,11 +207,7 @@ draw(void)
 		}*/
 
 		focal_length = w()/ (float)(2.0*tan(Maze::To_Radians(maze->viewer_fov)*0.5));
-		// Draw the 3D view of the maze (the visible walls.) You write this.
-		// Note that all the information that is required to do the
-		// transformations and projection is contained in the Maze class,
-		// plus the focal length.
-
+		glClear(GL_DEPTH_BUFFER_BIT);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		float aspect = (float)w() / h();
@@ -207,6 +221,10 @@ draw(void)
 			viewer_pos[Maze::Y],
 			viewer_pos[Maze::Z] + cos(Maze::To_Radians(maze->viewer_dir)),
 			0.0, 1.0, 0.0);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
 
 		maze->Draw_View(focal_length);
 	}

@@ -629,7 +629,6 @@ Draw_Map(int min_x, int min_y, int max_x, int max_y)
 void Maze::
 Draw_Wall(float start[2], float end[2], float color[3]) {
 	
-	
 	float edge0[3] = { start[Y],0.0f,start[X] };
 	float edge1[3] = { end[Y],0.0f,end[X] };
 	glm::vec4 v1, v2, v3, v4, temp;
@@ -641,19 +640,22 @@ Draw_Wall(float start[2], float end[2], float color[3]) {
 	v3 = mvp * temp;
 	temp = { edge0[X],-1.0f,edge0[Z],1 };
 	v4 = mvp * temp;
-
-	glBegin(GL_POLYGON);
-	glColor3fv(color);
 	/*
+	v1 = { v1[0] / abs(v1[3]),v1[1] / abs(v1[3]) ,v1[2] / abs(v1[3]) ,1 };
+	v2 = { v2[0] / abs(v2[3]),v2[1] / abs(v2[3]) ,v2[2] / abs(v2[3]) ,1 };
+	v3 = { v3[0] / abs(v3[3]),v3[1] / abs(v3[3]) ,v3[2] / abs(v3[3]) ,1 };
+	v4 = { v4[0] / abs(v4[3]),v4[1] / abs(v4[3]) ,v4[2] / abs(v4[3]) ,1 };*/
+	glBegin(GL_POLYGON);
+	glColor3fv(color);/*
 	glVertex2f(v1[0],v1[1]);
 	glVertex2f(v2[0], v2[1]);
 	glVertex2f(v3[0], v3[1]);
-	glVertex2f(v4[0], v4[1]);
-	*/
+	glVertex2f(v4[0], v4[1]);*/
 	glVertex4f(v1[0], v1[1], v1[2], v1[3]);
 	glVertex4f(v2[0], v2[1], v2[2], v2[3]);
-	glVertex4f(v3[0], v3[1], v3[2], v2[3]);
+	glVertex4f(v3[0], v3[1], v3[2], v3[3]);
 	glVertex4f(v4[0], v4[1], v4[2], v4[3]);
+	glEnd();
 	
 	
 	/*
@@ -679,10 +681,6 @@ Draw_View(const float focal_dist)
 			this->edges[i]->endpoints[Edge::END]->posn[Vertex::X],
 			this->edges[i]->endpoints[Edge::END]->posn[Vertex::Y]
 		};
-		cout << this->edges[i]->endpoints[Edge::START]->posn[Vertex::X] << endl;
-		cout << this->edges[i]->endpoints[Edge::START]->posn[Vertex::Y] << endl;
-		cout << this->edges[i]->endpoints[Edge::END]->posn[Vertex::X] << endl;
-		cout << this->edges[i]->endpoints[Edge::END]->posn[Vertex::X] << endl;
 		float color[3] = { this->edges[i]->color[0],this->edges[i]->color[1],this->edges[i]->color[2] };
 		if (this->edges[i]->opaque) {
 			Draw_Wall(edge_start, edge_end, color);
