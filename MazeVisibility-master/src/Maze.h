@@ -146,7 +146,7 @@ class Maze {
 		static const char	X; // Used to index into the viewer's position
 		static const char	Y;
 		static const char	Z;
-
+		static glm::mat4x4 mvp;
 		int		num_vertices;	// The number of vertices in the maze
 		Vertex	**vertices;		// An array of pointers to the vertices.
 
