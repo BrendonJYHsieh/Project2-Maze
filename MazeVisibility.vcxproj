@@ -84,6 +84,9 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\Project2-Maze\MazeVisibility-master\lib;C:\Project2-Maze\MazeVisibility-master\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>C:\Project2-Maze\MazeVisibility-master\include;C:\Project2-Maze\MazeVisibility-master\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
