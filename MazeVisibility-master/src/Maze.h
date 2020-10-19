@@ -106,7 +106,7 @@ class Maze {
 		void Draw_Wall(float start[2], float end[2], float color[3]);
 		// Draws the first-person view of the maze. It is passed the focal distance.
 		// THIS IS THE FUINCTION YOU SHOULD MODIFY.
-		void	Draw_View(const float);
+		void	Draw_View(const float,glm::mat4x4);
 
 		// Save the maze to a file of the given name.
 		bool	Save(const char*);
@@ -146,7 +146,6 @@ class Maze {
 		static const char	X; // Used to index into the viewer's position
 		static const char	Y;
 		static const char	Z;
-		static glm::mat4x4 mvp;
 		int		num_vertices;	// The number of vertices in the maze
 		Vertex	**vertices;		// An array of pointers to the vertices.
 

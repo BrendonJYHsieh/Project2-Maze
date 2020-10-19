@@ -19,8 +19,7 @@
 
 #include "MazeWindow.h"
 
-
-
+glm::mat4x4 mvpp;
 //*************************************************************************
 //
 // * Constructor
@@ -65,8 +64,9 @@ void Perspective(const float& angleOfView, const float& imageAspectRatio, const 
 	matrix[10] = -(f + n) / (f - n);
 	matrix[11] = -1;
 	matrix[14] = -(2*f * n) / (f - n);
+	
 	for (int i = 0; i < 16; i++) {
-		Maze::mvp[i / 4][i % 4] = matrix[i];
+		mvpp[i / 4][i % 4] = matrix[i];
 	}
 	glLoadMatrixd(matrix);
 }
@@ -103,7 +103,7 @@ void LookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez,
 	matrix[14] = glm::dot(z, -eyes);
 	matrix[15] = 1;
 	for (int i = 0; i < 16; i++) {
-		Maze::mvp[i / 4][i % 4] *= matrix[i];
+		mvpp[i / 4][i % 4] *= matrix[i];
 	}
 	glLoadMatrixd(matrix);
 }
@@ -203,7 +203,7 @@ draw(void)
 			viewer_pos[Maze::Z] + cos(Maze::To_Radians(maze->viewer_dir)),
 			0.0, 1.0, 0.0);
 
-		maze->Draw_View(focal_length);
+		maze->Draw_View(focal_length,mvpp);
 	}
 }
 
