@@ -24,6 +24,7 @@
 #include <FL/math.h> // Use FLTK's math header because it defines M_PI
 #include <stdio.h>
 #include "Cell.h"
+#include "LineSeg.h"
 #include<glm/mat4x4.hpp>
 #include<glm/matrix.hpp>
 #include<glm/vec3.hpp>
@@ -102,7 +103,6 @@ class Maze {
 		// Draws the frustum on the map view of the maze. It is passed the
 		// minimum and maximum corners of the window in which to draw.
 		void	Draw_Frustum(int, int, int, int);
-
 		void Draw_Wall(float start[2], float end[2], float color[3]);
 		// Draws the first-person view of the maze. It is passed the focal distance.
 		// THIS IS THE FUINCTION YOU SHOULD MODIFY.
