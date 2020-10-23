@@ -65,11 +65,10 @@ void Perspective(const float& angleOfView, const float& imageAspectRatio, const 
 	matrix[10] = -(f + n) / (f - n);
 	matrix[11] = -1;
 	matrix[14] = -(2*f * n) / (f - n);
+	
 	for (int i = 0; i < 16; i++) {
 		pmatrix[i / 4][i % 4] = matrix[i];
 	}
-	
-	glLoadMatrixd(matrix);
 }
 
 void LookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez,
@@ -103,33 +102,7 @@ void LookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez,
 	matrix[1][3] = 0;
 	matrix[2][3] = 0;
 	matrix[3][3] = 1;
-	/*
-	matrix[0] = x[0];
-	matrix[1] = y[0];
-	matrix[2] = z[0];
-	matrix[3] = 0;
-	matrix[4] = x[1];
-	matrix[5] = y[1];
-	matrix[6] = z[1];
-	matrix[7] = 0;
-	matrix[8] = x[2];
-	matrix[9] = y[2];
-	matrix[10] = z[2];
-	matrix[11] = 0;
-	matrix[12] =-1* glm::dot(x,eyes);
-	matrix[13] =-1* glm::dot(y,eyes);
-	matrix[14] =-1* glm::dot(z, eyes);
-	matrix[15] = 1;*/
-
 	modelviewmatrix=matrix;
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			matrix1[i * 4 + j] = modelviewmatrix[i][j];
-		}
-		cout << endl;
-		
-	}
-	glLoadMatrixd(matrix1);
 }
 //*************************************************************************
 //
@@ -206,23 +179,24 @@ draw(void)
 		}*/
 
 		focal_length = w()/ (float)(2.0*tan(Maze::To_Radians(maze->viewer_fov)*0.5));
-		glClear(GL_DEPTH_BUFFER_BIT);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
+		//glClear(GL_DEPTH_BUFFER_BIT);
+		//glMatrixMode(GL_PROJECTION);
+		//glLoadIdentity();
 		float aspect = (float)w() / h();
 		Perspective(maze->viewer_fov,aspect,0.01, 200);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+		//glMatrixMode(GL_MODELVIEW);
+		//glLoadIdentity();
 		float viewer_pos[3] = { maze->viewer_posn[Maze::Y],0.0f,maze->viewer_posn[Maze::X] };
 		LookAt(viewer_pos[Maze::X], viewer_pos[Maze::Y], viewer_pos[Maze::Z],
 			viewer_pos[Maze::X] + sin(Maze::To_Radians(maze->viewer_dir)),
 			viewer_pos[Maze::Y],
 			viewer_pos[Maze::Z] + cos(Maze::To_Radians(maze->viewer_dir)),
 			0.0, 1.0, 0.0);
+		/*
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+		glLoadIdentity();*/
 
 		maze->Draw_View(focal_length);
 	}

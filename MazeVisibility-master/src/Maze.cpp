@@ -635,34 +635,42 @@ Draw_Wall(float start[2], float end[2], float color[3]) {
 	float edge1[3] = { end[Y],0.0f,end[X] };
 
 	
+	if (edge0[0] == 0 && edge0[2] == 0 || edge1[0] == 0 && edge1[2] == 0) {
+		return;
+	}
+	else {
+		glm::vec4 v1, v2, v3, v4, temp;
+		temp = { edge0[X],1.0f,edge0[Z],1 };
+		v1 = pmatrix * temp;
+		temp = { edge1[X],1.0f,edge1[Z],1 };
+		v2 = pmatrix * temp;
+		temp = { edge1[X],-1.0f,edge1[Z],1 };
+		v3 = pmatrix * temp;
+		temp = { edge0[X],-1.0f,edge0[Z],1 };
+		v4 = pmatrix * temp;
 
-	glm::vec4 v1, v2, v3, v4, temp;
-	temp = { edge0[X],1.0f,edge0[Z],1 };
-	v1 = pmatrix * temp;
-	temp = { edge1[X],1.0f,edge1[Z],1 };
-	v2 = pmatrix * temp;
-	temp = { edge1[X],-1.0f,edge1[Z],1 };
-	v3 = pmatrix * temp;
-	temp = { edge0[X],-1.0f,edge0[Z],1 };
-	v4 = pmatrix * temp;
+		v1 = { v1[0] / abs(v1[3]),v1[1] / abs(v1[3]) ,v1[2] / abs(v1[3]) ,1 };
+		v2 = { v2[0] / abs(v2[3]),v2[1] / abs(v2[3]) ,v2[2] / abs(v2[3]) ,1 };
+		v3 = { v3[0] / abs(v3[3]),v3[1] / abs(v3[3]) ,v3[2] / abs(v3[3]) ,1 };
+		v4 = { v4[0] / abs(v4[3]),v4[1] / abs(v4[3]) ,v4[2] / abs(v4[3]) ,1 };
 
-	v1 = { v1[0] / abs(v1[3]),v1[1] / abs(v1[3]) ,v1[2] / abs(v1[3]) ,1 };
-	v2 = { v2[0] / abs(v2[3]),v2[1] / abs(v2[3]) ,v2[2] / abs(v2[3]) ,1 };
-	v3 = { v3[0] / abs(v3[3]),v3[1] / abs(v3[3]) ,v3[2] / abs(v3[3]) ,1 };
-	v4 = { v4[0] / abs(v4[3]),v4[1] / abs(v4[3]) ,v4[2] / abs(v4[3]) ,1 };
+		glBegin(GL_POLYGON);
+		glColor3fv(color);
+		glVertex2f(v1[0], v1[1]);
+		glVertex2f(v2[0], v2[1]);
+		glVertex2f(v3[0], v3[1]);
+		glVertex2f(v4[0], v4[1]);
+		glEnd();
+	}
+		
 	
-	glBegin(GL_POLYGON);
-	glColor3fv(color);
-	glVertex2f(v1[0],v1[1]);
-	glVertex2f(v2[0], v2[1]);
-	glVertex2f(v3[0], v3[1]);
-	glVertex2f(v4[0], v4[1]);
+	
 	/*
 	glVertex4f(v1[0], v1[1], v1[2], v1[3]);
 	glVertex4f(v2[0], v2[1], v2[2], v2[3]);
 	glVertex4f(v3[0], v3[1], v3[2], v3[3]);
 	glVertex4f(v4[0], v4[1], v4[2], v4[3]);*/
-	glEnd();
+	
 	
 	
 	/*
@@ -683,8 +691,8 @@ Draw_View(const float focal_dist)
 	
 	glm::vec4 start, end;
 	//四個頂點
-	Vertex temp1(0, - tan(viewer_fov / 2) * 0.01,0.01);
-	Vertex temp2(0, - tan(viewer_fov / 2) * 200, 200);
+	Vertex temp1(0, -tan(viewer_fov / 2) * 0.01,0.01);
+	Vertex temp2(0, -tan(viewer_fov / 2) * 200, 200);
 	Vertex temp3(0,   tan(viewer_fov / 2) * 200, 200);
 	Vertex temp4(0,   tan(viewer_fov / 2) * 0.01,0.01);
 	//四條邊
@@ -694,6 +702,9 @@ Draw_View(const float focal_dist)
 	Edge side4(0, &temp4, &temp1, 0, 0, 0);
 	//儲存四條邊
 	vector<Edge>sides = {side1,side2,side3,side4};
+
+	vector<Edge>out;
+
 	//檢查四個面
 	for (int i = 0; i < (int)this->num_edges; i++) {
 		//X,Y,Z,W
@@ -705,27 +716,36 @@ Draw_View(const float focal_dist)
 		this->edges[i]->endpoints[Edge::START]->posn[Vertex::Y] = 0;
 		this->edges[i]->endpoints[Edge::START]->posn[Vertex::X] = 0;
 		//ModelView 
-		start = start* modelviewmatrix;
-		end =end* modelviewmatrix;
+		start = modelviewmatrix*start;
+		end =modelviewmatrix*end;
 		//
 		Vertex p1(0, start[0], start[2]); //start點
 		Vertex p2(0, end[0], end[2]); //end點
 		Edge outputlist(0, &p1, &p2, 0.0f, 0.0f, 0.0f);
+		
 		for (int j = 0; j < 4; j++) {
 			Edge inputList = outputlist;
-			if (sides[j].Point_Side(p1.posn[0],p1.posn[1]) == Edge::RIGHT) {
-				if (sides[j].Point_Side(p2.posn[0], p2.posn[1])!=Edge::RIGHT) {
-					p2.posn[0] = sides[j].endpoints[0]->posn[0] - (sides[j].endpoints[1]->posn[0] - sides[j].endpoints[0]->posn[0]) * LineSeg(&sides[j]).Cross_Param(&outputlist);
-					p2.posn[1] = sides[j].endpoints[0]->posn[1] + (sides[j].endpoints[1]->posn[1] - sides[j].endpoints[0]->posn[1]) * LineSeg(&sides[j]).Cross_Param(&outputlist);
-					this->edges[i]->endpoints[Edge::END]->posn[Vertex::Y] = p2.posn[0];
-					this->edges[i]->endpoints[Edge::END]->posn[Vertex::X] = p2.posn[1];
+			//判斷S點有無在裡面
+			if (sides[j].Point_Side(p1.posn[Vertex::X],p1.posn[Vertex::Y]) == Edge::RIGHT) {
+				//判斷E點有沒有在裡面
+				if (sides[j].Point_Side(p2.posn[Vertex::X], p2.posn[Vertex::Y])!=Edge::RIGHT) {
+					p2.posn[Vertex::X] = sides[j].endpoints[Edge::START]->posn[Vertex::X] + (sides[j].endpoints[Edge::END]->posn[Vertex::X] - sides[j].endpoints[Edge::START]->posn[Vertex::X]) * LineSeg(&sides[j]).Cross_Param(&inputList);
+					p2.posn[Vertex::Y] = sides[j].endpoints[Edge::START]->posn[Vertex::Y] + (sides[j].endpoints[Edge::END]->posn[Vertex::Y] - sides[j].endpoints[Edge::START]->posn[Vertex::Y]) * LineSeg(&sides[j]).Cross_Param(&inputList);
+					this->edges[i]->endpoints[Edge::END]->posn[Vertex::Y] = p2.posn[Vertex::X];
+					this->edges[i]->endpoints[Edge::END]->posn[Vertex::X] = p2.posn[Vertex::Y];
 				}
+				this->edges[i]->endpoints[Edge::START]->posn[Vertex::Y] = p1.posn[Vertex::X];
+				this->edges[i]->endpoints[Edge::START]->posn[Vertex::X] = p1.posn[Vertex::Y];
 			}
-			else if (sides[j].Point_Side(p2.X, p2.Y) == Edge::RIGHT) {
-				p1.posn[0] = sides[j].endpoints[0]->posn[0] - (sides[j].endpoints[1]->posn[0] - sides[j].endpoints[0]->posn[0]) * LineSeg(&sides[j]).Cross_Param(&outputlist);
-				p1.posn[1] = sides[j].endpoints[0]->posn[1] + (sides[j].endpoints[1]->posn[1] - sides[j].endpoints[0]->posn[1]) * LineSeg(&sides[j]).Cross_Param(&outputlist);
-				this->edges[i]->endpoints[Edge::START]->posn[Vertex::Y] = p2.posn[0];
-				this->edges[i]->endpoints[Edge::START]->posn[Vertex::X] = p2.posn[1];
+			else if (sides[j].Point_Side(p2.posn[Vertex::X] ,p2.posn[Vertex::Y]) == Edge::RIGHT) {
+				//this->edges[i]->endpoints[Edge::END]->posn[Vertex::Y] = p2.posn[Vertex::X];
+				//this->edges[i]->endpoints[Edge::END]->posn[Vertex::X] = p2.posn[Vertex::Y];
+				//
+				cout << LineSeg(&sides[j]).Cross_Param(&inputList) << endl;
+				p1.posn[Vertex::X] = sides[j].endpoints[Edge::START]->posn[Vertex::X] + (sides[j].endpoints[Edge::END]->posn[Vertex::X] - sides[j].endpoints[Edge::START]->posn[Vertex::X]) * LineSeg(&sides[j]).Cross_Param(&inputList);
+				p1.posn[Vertex::Y] = sides[j].endpoints[Edge::START]->posn[Vertex::Y] + (sides[j].endpoints[Edge::END]->posn[Vertex::Y] - sides[j].endpoints[Edge::START]->posn[Vertex::Y]) * LineSeg(&sides[j]).Cross_Param(&inputList);
+				this->edges[i]->endpoints[Edge::END]->posn[Vertex::Y] = p1.posn[Vertex::X];
+				this->edges[i]->endpoints[Edge::END]->posn[Vertex::X] = p1.posn[Vertex::Y];
 			}
 		}
 	}
