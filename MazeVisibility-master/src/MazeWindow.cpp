@@ -56,7 +56,7 @@ void Perspective(const float& angleOfView, const float& imageAspectRatio, const 
 	float r, t, b,l;
 	float scale = tan(angleOfView * 0.5 * M_PI / 180) * n;
 	r = imageAspectRatio * scale, l = -r;
-	t = scale, b = -t;
+	t = scale, b = -t;/*
 	GLdouble matrix[16] = { 0 };
 	matrix[0] = 2 * n / (r - l);
 	matrix[5] = 2 * n / (t - b);
@@ -64,11 +64,26 @@ void Perspective(const float& angleOfView, const float& imageAspectRatio, const 
 	matrix[9] = (t + b) / (t - b);
 	matrix[10] = -(f + n) / (f - n);
 	matrix[11] = -1;
-	matrix[14] = -(2*f * n) / (f - n);
-	
+	matrix[14] = -(2 * f * n) / (f - n);
+
 	for (int i = 0; i < 16; i++) {
 		pmatrix[i / 4][i % 4] = matrix[i];
+	}*/
+	glm::mat4x4 matrix;
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			matrix[i][j] = 0;
+		}
 	}
+	matrix[0][0]= 2 * n / (r - l);
+	matrix[1][1]= 2 * n / (t - b);
+	matrix[2][0]= (r + l) / (r - l);
+	matrix[2][1] = (t + b) / (t - b);
+	matrix[2][2]= -(f + n) / (f - n);
+	matrix[2][3] = -1;
+	matrix[3][2]= -(2*f * n) / (f - n);
+	pmatrix= matrix;
+
 }
 
 void LookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez,
@@ -102,7 +117,7 @@ void LookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez,
 	matrix[1][3] = 0;
 	matrix[2][3] = 0;
 	matrix[3][3] = 1;
-	modelviewmatrix=matrix;
+	modelviewmatrix = matrix;
 }
 //*************************************************************************
 //
@@ -130,7 +145,6 @@ draw(void)
 	}
 
 	// Clear the screen.
-	//glClear(GL_COLOR_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glMatrixMode(GL_MODELVIEW);
@@ -160,7 +174,25 @@ draw(void)
 
 
 	if ( maze ) {
-		focal_length = w()/ (float)(2.0*tan(Maze::To_Radians(maze->viewer_fov)*0.5));;
+		/*
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glm::mat4x4 Mproj;
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				Mproj[i][j]=0;
+			}
+		}
+		setProjectionMatrix(maze->viewer_fov, 0.001, 200, Mproj);
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				cout << Mproj[i][j]<<" ";
+			}
+			cout << endl;
+		}*/
+
+		focal_length = w()/ (float)(2.0*tan(Maze::To_Radians(maze->viewer_fov)*0.5));
 		float aspect = (float)w() / h();
 		Perspective(maze->viewer_fov,aspect,0.01, 200);
 		float viewer_pos[3] = { maze->viewer_posn[Maze::Y],0.0f,maze->viewer_posn[Maze::X] };
@@ -170,11 +202,10 @@ draw(void)
 			viewer_pos[Maze::Z] + cos(Maze::To_Radians(maze->viewer_dir)),
 			0.0, 1.0, 0.0);
 		maze->Draw_View(focal_length);
-		/*
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();*/
+		glLoadIdentity();
 	}
 }
 
@@ -284,5 +315,4 @@ handle(int event)
 	// Pass any other event types on the superclass.
 	return Fl_Gl_Window::handle(event);
 }
-
 
