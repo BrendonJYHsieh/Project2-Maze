@@ -130,7 +130,7 @@ draw(void)
 	}
 
 	// Clear the screen.
-	glClear(GL_COLOR_BUFFER_BIT);
+	//glClear(GL_COLOR_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glMatrixMode(GL_MODELVIEW);
@@ -160,45 +160,21 @@ draw(void)
 
 
 	if ( maze ) {
-		/*
-		glClear(GL_DEPTH_BUFFER_BIT);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glm::mat4x4 Mproj;
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
-				Mproj[i][j]=0;
-			}
-		}
-		setProjectionMatrix(maze->viewer_fov, 0.001, 200, Mproj);
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
-				cout << Mproj[i][j]<<" ";
-			}
-			cout << endl;
-		}*/
-
-		focal_length = w()/ (float)(2.0*tan(Maze::To_Radians(maze->viewer_fov)*0.5));
-		//glClear(GL_DEPTH_BUFFER_BIT);
-		//glMatrixMode(GL_PROJECTION);
-		//glLoadIdentity();
+		focal_length = w()/ (float)(2.0*tan(Maze::To_Radians(maze->viewer_fov)*0.5));;
 		float aspect = (float)w() / h();
 		Perspective(maze->viewer_fov,aspect,0.01, 200);
-		//glMatrixMode(GL_MODELVIEW);
-		//glLoadIdentity();
 		float viewer_pos[3] = { maze->viewer_posn[Maze::Y],0.0f,maze->viewer_posn[Maze::X] };
 		LookAt(viewer_pos[Maze::X], viewer_pos[Maze::Y], viewer_pos[Maze::Z],
 			viewer_pos[Maze::X] + sin(Maze::To_Radians(maze->viewer_dir)),
 			viewer_pos[Maze::Y],
 			viewer_pos[Maze::Z] + cos(Maze::To_Radians(maze->viewer_dir)),
 			0.0, 1.0, 0.0);
+		maze->Draw_View(focal_length);
 		/*
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();*/
-
-		maze->Draw_View(focal_length);
 	}
 }
 
