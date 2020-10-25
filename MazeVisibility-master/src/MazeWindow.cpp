@@ -168,8 +168,6 @@ draw(void)
 		glVertex2f(-w() * 0.5f, 0.0       );
 		glVertex2f( w() * 0.5f, 0.0       );
 
-		
-
 	glEnd();
 
 
