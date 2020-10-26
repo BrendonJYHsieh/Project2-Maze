@@ -632,41 +632,47 @@ Draw_Map(int min_x, int min_y, int max_x, int max_y)
 
 void Maze::
 Draw_Wall(float start[2], float end[2], float color[3]) {
-	cout << start[X] << " " << start[Y] << " " << end[X] << " " << end[Y] << endl;
-	float edge0[3] = { start[Y],0.0f,start[X] };
-	float edge1[3] = { end[Y],0.0f,end[X] };
+	float edge0[3] = { start[X],0.0f,start[Y] };
+	float edge1[3] = { end[X],0.0f,end[Y] };
 	glm::vec4 v1, v2, v3, v4, temp;
 	temp = { edge0[X],1.0f,edge0[Z],1 };
-	v1 = pmatrix * temp;
+	v1 = pmatrix*temp;
 	temp = { edge1[X],1.0f,edge1[Z],1 };
-	v2 = pmatrix  * temp;
+	v2 = pmatrix * temp;
 	temp = { edge1[X],-1.0f,edge1[Z],1 };
 	v3 = pmatrix * temp;
 	temp = { edge0[X],-1.0f,edge0[Z],1 };
 	v4 = pmatrix * temp;
-	
-	v1 = { v1[0] / abs(v1[3]),v1[1] / abs(v1[3]) ,v1[2] / abs(v1[3]) ,1 };
-	v2 = { v2[0] / abs(v2[3]),v2[1] / abs(v2[3]) ,v2[2] / abs(v2[3]) ,1 };
-	v3 = { v3[0] / abs(v3[3]),v3[1] / abs(v3[3]) ,v3[2] / abs(v3[3]) ,1 };
-	v4 = { v4[0] / abs(v4[3]),v4[1] / abs(v4[3]) ,v4[2] / abs(v4[3]) ,1 };
+	v1 = { v1[0] / (v1[3]),v1[1] / (v1[3]) ,v1[2] / (v1[3]) ,1 };
+	v2 = { v2[0] / (v2[3]),v2[1] / (v2[3]) ,v2[2] / (v2[3]) ,1 };
+	v3 = { v3[0] / (v3[3]),v3[1] / (v3[3]) ,v3[2] / (v3[3]) ,1 };
+	v4 = { v4[0] / (v4[3]),v4[1] / (v4[3]) ,v4[2] / (v4[3]) ,1 };
 	glBegin(GL_POLYGON);
 	glColor3fv(color);
-	glVertex2f(v1[0],v1[1]);
-	glVertex2f(v2[0], v2[1]);
-	glVertex2f(v3[0], v3[1]);
 	glVertex2f(v4[0], v4[1]);
+	glVertex2f(v3[0], v3[1]);
+	glVertex2f(v2[0], v2[1]);
+	glVertex2f(v1[0],v1[1]);
+	
+	
+	
 	glEnd();
 }
 
 Vertex ComputeIntersection(Vertex start, Vertex end, Edge edge) {
+
 	Edge temp(0, &start, &end, 0, 0, 0);
 	Vertex data(0, 0, 0);
-	float x = LineSeg(&edge).Cross_Param(&temp);
-	if(0<x&&x<1){
-		data.posn[0] = edge.endpoints[Edge::START]->posn[Vertex::X] + (edge.endpoints[Edge::END]->posn[Vertex::X] - edge.endpoints[Edge::START]->posn[Vertex::X]) * x;
-		data.posn[1] = edge.endpoints[Edge::START]->posn[Vertex::Y] + (edge.endpoints[Edge::END]->posn[Vertex::Y] - edge.endpoints[Edge::START]->posn[Vertex::Y]) * x;
+	
+	float E1 = LineSeg(&edge).Cross_Param(&temp);
+	/*float E2 = LineSeg(&temp).Cross_Param(&edge);
+	if (0 < E1 && E1 < 1 && 0 < E2 && E2 < 1) {
+		data.posn[0] = edge.endpoints[Edge::START]->posn[Vertex::X] + (edge.endpoints[Edge::END]->posn[Vertex::X] - edge.endpoints[Edge::START]->posn[Vertex::X]) * E1;
+		data.posn[1] = edge.endpoints[Edge::START]->posn[Vertex::Y] + (edge.endpoints[Edge::END]->posn[Vertex::Y] - edge.endpoints[Edge::START]->posn[Vertex::Y]) * E1;
 		return data;
-	}
+	}*/
+	data.posn[0] = edge.endpoints[Edge::START]->posn[Vertex::X] + (edge.endpoints[Edge::END]->posn[Vertex::X] - edge.endpoints[Edge::START]->posn[Vertex::X]) * E1;
+	data.posn[1] = edge.endpoints[Edge::START]->posn[Vertex::Y] + (edge.endpoints[Edge::END]->posn[Vertex::Y] - edge.endpoints[Edge::START]->posn[Vertex::Y]) * E1;
 	return data;
 }
 
@@ -674,13 +680,12 @@ void Maze::
 Draw_View(const float focal_dist)
 //======================================================================
 {
-	
 	//四個頂點
-	Vertex temp1(0, -tan(To_Radians(viewer_fov / 2)) * 0.01, 0.01);
-	Vertex temp2(0, -tan(To_Radians(viewer_fov / 2)) * 200, 200);
-	Vertex temp3(0, tan(To_Radians(viewer_fov / 2)) * 200, 200);
-	Vertex temp4(0, tan(To_Radians(viewer_fov / 2)) * 0.01, 0.01);
-	//四條邊
+	Vertex temp1(0, tan(To_Radians(viewer_fov / 2)) * 0.01, -0.01);
+	Vertex temp2(0, tan(To_Radians(viewer_fov / 2)) * 200, -200);
+	Vertex temp3(0, -tan(To_Radians(viewer_fov / 2)) * 200, -200);
+	Vertex temp4(0, -tan(To_Radians(viewer_fov / 2)) * 0.01, -0.01);
+	//四條邊1
 	Edge side1(0, &temp1, &temp2, 0, 0, 0);
 	Edge side2(0, &temp2, &temp3, 0, 0, 0);
 	Edge side3(0, &temp3, &temp4, 0, 0, 0);
@@ -689,52 +694,52 @@ Draw_View(const float focal_dist)
 	vector<Edge>sides = { side1,side2,side3,side4 };
 	vector<Edge>draw = {};
 	//所有牆壁檢查
+	
 	for (int i = 0; i < (int)this->num_edges; i++) {
-		//X,Y,Z,W
-		LineSeg edge_line(edges[i]);
-		glm::vec4 start(edge_line.start[1], 1.0f, edge_line.start[0], 1.0f), end(edge_line.end[1], 1.0f, edge_line.end[0], 1.0f);
-		//ModelView 
-		start = modelviewmatrix * start;
-		end = modelviewmatrix * end;
-		Vertex p1(0, start[0], start[2]); //start點
-		Vertex p2(0, end[0], end[2]); //end點
-		//cout <<p1.posn[X] << " " << p1.posn[Y] << " " << p2.posn[X] << " " << p2.posn[Y] << endl;
-		vector<Vertex>  outputList = { p1,p2 };
-		for (int j = 0; j < 4; j++) {
-			cout << "wall:" << sides[j].endpoints[0]->posn[X] << " " << sides[j].endpoints[0]->posn[Y] << endl;
-			vector<Vertex>inputList = outputList;
-			outputList = {};
-			if (sides[j].Point_Side(inputList[0].posn[X], inputList[0].posn[Y]) == Edge::RIGHT) {
-				if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::LEFT) {
-					outputList.push_back(inputList[0]);					
+		if (this->edges[i]->opaque) {
+			//X,Y,Z,W
+			LineSeg edge_line(edges[i]);
+			glm::vec4 start(edge_line.start[1], 1.0f, edge_line.start[0], 1.0f), end(edge_line.end[1], 1.0f, edge_line.end[0], 1.0f);
+			//ModelView 
+			start = modelviewmatrix * start;
+			end = modelviewmatrix*end;
+			Vertex p1(0, start[0], start[2]); //start點
+			Vertex p2(0, end[0], end[2]); //end點
+			vector<Vertex>  outputList = { p1,p2 };
+			cout<<"Before:" << outputList[0].posn[X] << " " << outputList[0].posn[Y] << " " << outputList[1].posn[X] << " " << outputList[1].posn[Y] << endl;
+			for (int j = 0; j < 4; j++) {
+				//cout << "wall:" << sides[j].endpoints[0]->posn[X] << " " << sides[j].endpoints[0]->posn[Y] << endl;
+				vector<Vertex>inputList = outputList;
+				outputList = {};
+				if (sides[j].Point_Side(inputList[0].posn[X], inputList[0].posn[Y]) == Edge::RIGHT) {
+					if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::LEFT) {
+						outputList.push_back(inputList[0]);
+						outputList.push_back(ComputeIntersection(inputList[0], inputList[1], sides[j]));
+					}
+					else {
+						outputList = inputList;
+					}
+				}
+				else if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::RIGHT) {
 					outputList.push_back(ComputeIntersection(inputList[0], inputList[1], sides[j]));
+					outputList.push_back(inputList[1]);
 				}
 				else {
-					outputList = inputList;
+					break;
 				}
 			}
-			else if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::RIGHT) {
-				outputList.push_back(ComputeIntersection(inputList[0], inputList[1], sides[j]));
-				outputList.push_back(inputList[1]);
-			}
-			else {
-				break;
-			}
-		}
 
-		if (outputList.size() != 0) {
-
-			cout << outputList[0].posn[X] << " " << outputList[0].posn[Y]<<" " << outputList[1].posn[X] << " " << outputList[1].posn[Y] << endl;
-			float edge_start[2] = {
-			outputList[0].posn[X],
-			outputList[0].posn[Y]
-			};
-			float edge_end[2] = {
-			outputList[1].posn[X],
-			outputList[1].posn[Y]
-			};
-			float color[3] = { this->edges[i]->color[0],this->edges[i]->color[1],this->edges[i]->color[2] };
-			if (this->edges[i]->opaque) {
+			if (outputList.size() != 0) {
+				cout<<"after:" << outputList[0].posn[X] << " " << outputList[0].posn[Y] << " " << outputList[1].posn[X] << " " << outputList[1].posn[Y] << endl;
+				float edge_start[2] = {
+				outputList[0].posn[X],
+				outputList[0].posn[Y]
+				};
+				float edge_end[2] = {
+				outputList[1].posn[X],
+				outputList[1].posn[Y]
+				};
+				float color[3] = { this->edges[i]->color[0],this->edges[i]->color[1],this->edges[i]->color[2] };
 				cout << "draw" << endl;
 				Draw_Wall(edge_start, edge_end, color);
 			}
