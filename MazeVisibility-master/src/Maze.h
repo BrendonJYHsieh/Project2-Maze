@@ -30,6 +30,7 @@
 #include<glm/vec3.hpp>
 #include<glm/geometric.hpp>
 #include<iostream>
+#include<vector>
 using namespace std;
 
 //************************************************************************
@@ -125,6 +126,7 @@ class Maze {
 		void    Build_Maze(void);
 		void    Set_Extents(void);
 		void    Find_View_Cell(Cell*);
+		void	Draw_Cell(Cell* cell, vector<Vertex>);
 
 	private:
 		Cell				*view_cell;// The cell that currently contains the view

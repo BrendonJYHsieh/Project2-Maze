@@ -653,49 +653,162 @@ Draw_Wall(float start[2], float end[2], float color[3]) {
 	glVertex2f(v3[0], v3[1]);
 	glVertex2f(v2[0], v2[1]);
 	glVertex2f(v1[0],v1[1]);
-	
-	
-	
 	glEnd();
 }
 
-Vertex ComputeIntersection(Vertex start, Vertex end, Edge edge) {
+Vertex add(Vertex start, Vertex end, Edge edge) {
 
 	Edge temp(0, &start, &end, 0, 0, 0);
 	Vertex data(0, 0, 0);
-	
 	float E1 = LineSeg(&edge).Cross_Param(&temp);
-	/*float E2 = LineSeg(&temp).Cross_Param(&edge);
-	if (0 < E1 && E1 < 1 && 0 < E2 && E2 < 1) {
-		data.posn[0] = edge.endpoints[Edge::START]->posn[Vertex::X] + (edge.endpoints[Edge::END]->posn[Vertex::X] - edge.endpoints[Edge::START]->posn[Vertex::X]) * E1;
-		data.posn[1] = edge.endpoints[Edge::START]->posn[Vertex::Y] + (edge.endpoints[Edge::END]->posn[Vertex::Y] - edge.endpoints[Edge::START]->posn[Vertex::Y]) * E1;
-		return data;
-	}*/
 	data.posn[0] = edge.endpoints[Edge::START]->posn[Vertex::X] + (edge.endpoints[Edge::END]->posn[Vertex::X] - edge.endpoints[Edge::START]->posn[Vertex::X]) * E1;
 	data.posn[1] = edge.endpoints[Edge::START]->posn[Vertex::Y] + (edge.endpoints[Edge::END]->posn[Vertex::Y] - edge.endpoints[Edge::START]->posn[Vertex::Y]) * E1;
 	return data;
+}
+void Maze::
+Draw_Cell(Cell *cell, vector<Vertex>frustum) {
+	cell->footprint = true;
+
+	Vertex aa(0, frustum[0].posn[X], frustum[0].posn[Y]);
+	Vertex bb(0, frustum[1].posn[X], frustum[1].posn[Y]);
+	Vertex cc(0, frustum[2].posn[X], frustum[2].posn[Y]);
+	Vertex dd(0, frustum[3].posn[X], frustum[3].posn[Y]);
+	vector<Vertex>frustum1 = {aa,bb,cc,dd};
+
+
+
+	Vertex temp1(0, 0, 0);
+	Vertex temp2(0, frustum[1].posn[X], frustum[1].posn[Y]);
+	Vertex temp3(0, frustum[2].posn[X], frustum[2].posn[Y]);
+	Edge s1(0, &temp1, &temp2, 0, 0, 0);
+	Edge s2(0, &temp3, &temp1, 0, 0, 0);
+	vector<Edge>new_sides = { s1,s2 };
+	
+
+	Edge side1(0, &frustum[0], &frustum[1], 0, 0, 0);
+	Edge side2(0, &frustum[1], &frustum[2], 0, 0, 0);
+	Edge side3(0, &frustum[2], &frustum[3], 0, 0, 0);
+	Edge side4(0, &frustum[3], &frustum[0], 0, 0, 0);
+	//儲存四條邊
+	vector<Edge>sides = { side1,side2,side3,side4 };
+	for (int i = 0; i < 4; i++) {
+		if (cell->edges[i]->opaque) {
+			LineSeg edge_line(cell->edges[i]);
+			glm::vec4 start(edge_line.start[1], 1.0f, edge_line.start[0], 1.0f), end(edge_line.end[1], 1.0f, edge_line.end[0], 1.0f);
+			start = modelviewmatrix * start;
+			end = modelviewmatrix * end;
+			Vertex p1(0, start[0], start[2]); 
+			Vertex p2(0, end[0], end[2]); 
+			vector<Vertex>  outputList = { p1,p2 };
+			for (int j = 0; j < 4; j++) {
+				vector<Vertex>inputList = outputList;
+				outputList = {};		
+				if (sides[j].Point_Side(inputList[0].posn[X], inputList[0].posn[Y]) == Edge::RIGHT) {
+					if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::LEFT) {
+						outputList.push_back(inputList[0]);
+						outputList.push_back(add(inputList[0], inputList[1], sides[j]));					
+					}
+					else {
+						outputList = inputList;
+					}
+				}
+				else if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::RIGHT) {	
+					outputList.push_back(add(inputList[0], inputList[1], sides[j]));
+					outputList.push_back(inputList[1]);
+				}
+				else {
+					break;
+				}
+			}
+			if (outputList.size() != 0) {
+				float edge_start[2] = {
+				outputList[0].posn[X],
+				outputList[0].posn[Y]
+				};
+				float edge_end[2] = {
+				outputList[1].posn[X],
+				outputList[1].posn[Y]
+				};
+				float color[3] = { this->edges[i]->color[0],this->edges[i]->color[1],this->edges[i]->color[2] };
+				Draw_Wall(edge_start, edge_end, color);
+			}
+		}
+		else {
+			LineSeg edge_line(cell->edges[i]);
+			glm::vec4 start(edge_line.start[1], 1.0f, edge_line.start[0], 1.0f), end(edge_line.end[1], 1.0f, edge_line.end[0], 1.0f);
+			start = modelviewmatrix * start;
+			end = modelviewmatrix * end;
+			Vertex p1(0, start[0], start[2]);
+			Vertex p2(0, end[0], end[2]); 
+			vector<Vertex>  outputList = { p1,p2 };
+			Edge E2(0, &outputList[0], &outputList[1], 0, 0, 0);
+			if (outputList[0].posn[X] > outputList[1].posn[X]) {
+				swap(outputList[0], outputList[1]);
+			}
+			if(new_sides[0].Point_Side(outputList[0].posn[X], outputList[0].posn[Y])==Edge::RIGHT&& new_sides[0].Point_Side(outputList[1].posn[X], outputList[1].posn[Y]==Edge::RIGHT)
+				&& new_sides[1].Point_Side(outputList[0].posn[X], outputList[0].posn[Y]) == Edge::RIGHT&& new_sides[1].Point_Side(outputList[1].posn[X], outputList[1].posn[Y]) == Edge::RIGHT) {
+					frustum1[0].posn[X] = outputList[0].posn[X];
+					frustum1[0].posn[Y] = outputList[0].posn[Y];
+					frustum1[1].posn[X] = outputList[0].posn[X]/ outputList[0].posn[Y]*-200;
+					frustum1[1].posn[Y] = -200;
+					frustum1[3].posn[X] = outputList[1].posn[X];
+					frustum1[3].posn[Y] = outputList[1].posn[Y];
+					frustum1[2].posn[X] = outputList[1].posn[X] / outputList[1].posn[Y] * -200;
+					frustum1[2].posn[Y] = -200;
+			}
+			else if (new_sides[0].Point_Side(outputList[0].posn[X], outputList[0].posn[Y]) == Edge::RIGHT && new_sides[0].Point_Side(outputList[1].posn[X], outputList[1].posn[Y] == Edge::RIGHT)
+				&& new_sides[1].Point_Side(outputList[0].posn[X], outputList[0].posn[Y]) == Edge::RIGHT && new_sides[1].Point_Side(outputList[1].posn[X], outputList[1].posn[Y]) == Edge::LEFT){
+				frustum1[0].posn[X] = outputList[0].posn[X];
+				frustum1[0].posn[Y] = outputList[0].posn[Y];
+				frustum1[1].posn[X] = outputList[0].posn[X] / outputList[0].posn[Y] * -200;
+				frustum1[1].posn[Y] = -200;
+			}
+			else if (new_sides[0].Point_Side(outputList[0].posn[X], outputList[0].posn[Y]) == Edge::LEFT && new_sides[0].Point_Side(outputList[1].posn[X], outputList[1].posn[Y] == Edge::RIGHT)
+				&& new_sides[1].Point_Side(outputList[0].posn[X], outputList[0].posn[Y]) == Edge::RIGHT && new_sides[1].Point_Side(outputList[1].posn[X], outputList[1].posn[Y]) == Edge::RIGHT) {
+				frustum1[3].posn[X] = outputList[1].posn[X];
+				frustum1[3].posn[Y] = outputList[1].posn[Y];
+				frustum1[2].posn[X] = outputList[1].posn[X] / outputList[1].posn[Y] * -200;
+				frustum1[2].posn[Y] = -200;
+			}
+			if (!cell->edges[i]->Neighbor(cell)->footprint) {
+				Draw_Cell(cell->edges[i]->Neighbor(cell), frustum1);
+			}
+		}
+	}
 }
 
 void Maze::
 Draw_View(const float focal_dist)
 //======================================================================
 {
+	vector<Vertex>frustum;
+	frustum.push_back(Vertex(0,tan(To_Radians(viewer_fov / 2)) * 0.01, -0.01));
+	frustum.push_back(Vertex(0,tan(To_Radians(viewer_fov / 2)) * 200, -200));
+	frustum.push_back(Vertex(0,-tan(To_Radians(viewer_fov / 2)) * 200, -200));
+	frustum.push_back(Vertex(0,-tan(To_Radians(viewer_fov / 2)) * 0.01, -0.01));
+	Draw_Cell(this->cells[0], frustum);
+	for (int i = 0; i < this->num_cells; i++) {
+		this->cells[i]->footprint = false;
+	}
+
+	/*
 	//四個頂點
-	Vertex temp1(0, tan(To_Radians(viewer_fov / 2)) * 0.01, -0.01);
-	Vertex temp2(0, tan(To_Radians(viewer_fov / 2)) * 200, -200);
-	Vertex temp3(0, -tan(To_Radians(viewer_fov / 2)) * 200, -200);
-	Vertex temp4(0, -tan(To_Radians(viewer_fov / 2)) * 0.01, -0.01);
+	vector<Vertex>frustum;
+	frustum.push_back(Vertex(0, tan(To_Radians(viewer_fov / 2)) * 0.01, -0.01));
+	frustum.push_back(Vertex(0, tan(To_Radians(viewer_fov / 2)) * 200, -200));
+	frustum.push_back(Vertex(0, -tan(To_Radians(viewer_fov / 2)) * 200, -200));
+	frustum.push_back(Vertex(0, -tan(To_Radians(viewer_fov / 2)) * 0.01, -0.01));
 	//四條邊1
-	Edge side1(0, &temp1, &temp2, 0, 0, 0);
-	Edge side2(0, &temp2, &temp3, 0, 0, 0);
-	Edge side3(0, &temp3, &temp4, 0, 0, 0);
-	Edge side4(0, &temp4, &temp1, 0, 0, 0);
+	Edge side1(0, &frustum[0], &frustum[1], 0, 0, 0);
+	Edge side2(0, &frustum[1], &frustum[2], 0, 0, 0);
+	Edge side3(0, &frustum[2], &frustum[3], 0, 0, 0);
+	Edge side4(0, &frustum[3], &frustum[0], 0, 0, 0);
 	//儲存四條邊
 	vector<Edge>sides = { side1,side2,side3,side4 };
-	vector<Edge>draw = {};
 	//所有牆壁檢查
 	
 	for (int i = 0; i < (int)this->num_edges; i++) {
+		cout << i << endl;
 		if (this->edges[i]->opaque) {
 			//X,Y,Z,W
 			LineSeg edge_line(edges[i]);
@@ -706,31 +819,27 @@ Draw_View(const float focal_dist)
 			Vertex p1(0, start[0], start[2]); //start點
 			Vertex p2(0, end[0], end[2]); //end點
 			vector<Vertex>  outputList = { p1,p2 };
-			cout<<"Before:" << outputList[0].posn[X] << " " << outputList[0].posn[Y] << " " << outputList[1].posn[X] << " " << outputList[1].posn[Y] << endl;
 			for (int j = 0; j < 4; j++) {
-				//cout << "wall:" << sides[j].endpoints[0]->posn[X] << " " << sides[j].endpoints[0]->posn[Y] << endl;
 				vector<Vertex>inputList = outputList;
 				outputList = {};
 				if (sides[j].Point_Side(inputList[0].posn[X], inputList[0].posn[Y]) == Edge::RIGHT) {
 					if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::LEFT) {
 						outputList.push_back(inputList[0]);
-						outputList.push_back(ComputeIntersection(inputList[0], inputList[1], sides[j]));
+						outputList.push_back(add(inputList[0], inputList[1], sides[j]));
 					}
 					else {
 						outputList = inputList;
 					}
 				}
 				else if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::RIGHT) {
-					outputList.push_back(ComputeIntersection(inputList[0], inputList[1], sides[j]));
+					outputList.push_back(add(inputList[0], inputList[1], sides[j]));
 					outputList.push_back(inputList[1]);
 				}
 				else {
 					break;
 				}
 			}
-
 			if (outputList.size() != 0) {
-				cout<<"after:" << outputList[0].posn[X] << " " << outputList[0].posn[Y] << " " << outputList[1].posn[X] << " " << outputList[1].posn[Y] << endl;
 				float edge_start[2] = {
 				outputList[0].posn[X],
 				outputList[0].posn[Y]
@@ -740,11 +849,10 @@ Draw_View(const float focal_dist)
 				outputList[1].posn[Y]
 				};
 				float color[3] = { this->edges[i]->color[0],this->edges[i]->color[1],this->edges[i]->color[2] };
-				cout << "draw" << endl;
 				Draw_Wall(edge_start, edge_end, color);
 			}
 		}
-	}
+	}*/
 	frame_num++;
 }
 

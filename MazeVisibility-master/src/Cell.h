@@ -52,7 +52,7 @@ class Cell {
 
     int		index;		// The index of this cell (just an identifier).
     Edge		*edges[4];  // Pointers to the edges of the cell.
-
+	bool footprint = false;
     unsigned int    counter;	// Used in building a maze. It is reset to
 										// 0 after construction, and you should
 										// set it equal to the frame number each time
