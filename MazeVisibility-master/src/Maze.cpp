@@ -665,11 +665,15 @@ Vertex add(Vertex start, Vertex end, Edge edge) {
 	data.posn[1] = edge.endpoints[Edge::START]->posn[Vertex::Y] + (edge.endpoints[Edge::END]->posn[Vertex::Y] - edge.endpoints[Edge::START]->posn[Vertex::Y]) * E1;
 	return data;
 }
+float PointToSide(Vertex p1, Vertex p2) {
+	float a, b;
+	a = p1.posn[0] - p2.posn[0];
+	b = p1.posn[1] - p2.posn[1];
+	return (float)abs((p2.posn[0] * p1.posn[1] - p1.posn[0] * p2.posn[1]) / sqrt(a * a + b * b));
+}
 void Maze::
 Draw_Cell(Cell *cell, glm::vec2 L_point, glm::vec2 R_point) {
 	cell->footprint = true;
-	//cout << "L.X:" << L_point[0] << " L.Y:" << L_point[1] << endl;
-    //cout << "R.X:" << R_point[0] << " R.Y:" << R_point[1] << endl;
 	Vertex aa(0, L_point[0], L_point[1]);
 	Vertex bb(0, L_point[0]/ L_point[1]*-200, -200);
 	Vertex cc(0, R_point[0] / R_point[1] * -200, -200);
@@ -742,26 +746,32 @@ Draw_Cell(Cell *cell, glm::vec2 L_point, glm::vec2 R_point) {
 			Vertex p1(0, start[0], start[2]);
 			Vertex p2(0, end[0], end[2]); 
 			vector<Vertex>  outputList = { p1,p2 };
-			bool check = false;
-			for (int j = 0; j < 4; j++) {
-				vector<Vertex>inputList = outputList;
-				outputList = {};
-				if (sides[j].Point_Side(inputList[0].posn[X], inputList[0].posn[Y]) == Edge::RIGHT) {
-					if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::LEFT) {
-						outputList.push_back(inputList[0]);
+			if (PointToSide(p1,p2)>0.01) {
+				for (int j = 0; j < 4; j++) {
+					vector<Vertex>inputList = outputList;
+					outputList = {};
+					if (sides[j].Point_Side(inputList[0].posn[X], inputList[0].posn[Y]) == Edge::RIGHT) {
+						if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::LEFT) {
+							outputList.push_back(inputList[0]);
+							outputList.push_back(add(inputList[0], inputList[1], sides[j]));
+						}
+						else {
+							outputList = inputList;
+						}
+					}
+					else if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::RIGHT) {
 						outputList.push_back(add(inputList[0], inputList[1], sides[j]));
+						outputList.push_back(inputList[1]);
 					}
 					else {
-						outputList = inputList;
+						break;
 					}
 				}
-				else if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::RIGHT) {
-					outputList.push_back(add(inputList[0], inputList[1], sides[j]));
-					outputList.push_back(inputList[1]);
-				}
-				else {
-					break;
-				}
+			}
+			else {
+				cout << PointToSide(p1, p2) << endl;
+				cout<<"p1.x:" << p1.posn[X] << " p1.y:" << p1.posn[Y] << endl;
+				cout << "p2.x:" << p2.posn[X] << " p2.y:" << p2.posn[Y] << endl;
 			}
 			if (outputList.size() != 0) {
 				Vertex midpoint(0, (outputList[0].posn[X] + outputList[1].posn[X]) / 2, (outputList[0].posn[Y] + outputList[1].posn[Y]) / 2);
@@ -796,69 +806,6 @@ Draw_View(const float focal_dist)
 	for (int i = 0; i < this->num_cells; i++) {
 		this->cells[i]->footprint = false;
 	}
-
-	/*
-	//四個頂點
-	vector<Vertex>frustum;
-	frustum.push_back(Vertex(0, tan(To_Radians(viewer_fov / 2)) * 0.01, -0.01));
-	frustum.push_back(Vertex(0, tan(To_Radians(viewer_fov / 2)) * 200, -200));
-	frustum.push_back(Vertex(0, -tan(To_Radians(viewer_fov / 2)) * 200, -200));
-	frustum.push_back(Vertex(0, -tan(To_Radians(viewer_fov / 2)) * 0.01, -0.01));
-	//四條邊1
-	Edge side1(0, &frustum[0], &frustum[1], 0, 0, 0);
-	Edge side2(0, &frustum[1], &frustum[2], 0, 0, 0);
-	Edge side3(0, &frustum[2], &frustum[3], 0, 0, 0);
-	Edge side4(0, &frustum[3], &frustum[0], 0, 0, 0);
-	//儲存四條邊
-	vector<Edge>sides = { side1,side2,side3,side4 };
-	//所有牆壁檢查
-	
-	for (int i = 0; i < (int)this->num_edges; i++) {
-		cout << i << endl;
-		if (this->edges[i]->opaque) {
-			//X,Y,Z,W
-			LineSeg edge_line(edges[i]);
-			glm::vec4 start(edge_line.start[1], 1.0f, edge_line.start[0], 1.0f), end(edge_line.end[1], 1.0f, edge_line.end[0], 1.0f);
-			//ModelView 
-			start = modelviewmatrix * start;
-			end = modelviewmatrix*end;
-			Vertex p1(0, start[0], start[2]); //start點
-			Vertex p2(0, end[0], end[2]); //end點
-			vector<Vertex>  outputList = { p1,p2 };
-			for (int j = 0; j < 4; j++) {
-				vector<Vertex>inputList = outputList;
-				outputList = {};
-				if (sides[j].Point_Side(inputList[0].posn[X], inputList[0].posn[Y]) == Edge::RIGHT) {
-					if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::LEFT) {
-						outputList.push_back(inputList[0]);
-						outputList.push_back(add(inputList[0], inputList[1], sides[j]));
-					}
-					else {
-						outputList = inputList;
-					}
-				}
-				else if (sides[j].Point_Side(inputList[1].posn[X], inputList[1].posn[Y]) == Edge::RIGHT) {
-					outputList.push_back(add(inputList[0], inputList[1], sides[j]));
-					outputList.push_back(inputList[1]);
-				}
-				else {
-					break;
-				}
-			}
-			if (outputList.size() != 0) {
-				float edge_start[2] = {
-				outputList[0].posn[X],
-				outputList[0].posn[Y]
-				};
-				float edge_end[2] = {
-				outputList[1].posn[X],
-				outputList[1].posn[Y]
-				};
-				float color[3] = { this->edges[i]->color[0],this->edges[i]->color[1],this->edges[i]->color[2] };
-				Draw_Wall(edge_start, edge_end, color);
-			}
-		}
-	}*/
 	frame_num++;
 }
 
