@@ -126,7 +126,7 @@ class Maze {
 		void    Build_Maze(void);
 		void    Set_Extents(void);
 		void    Find_View_Cell(Cell*);
-		void	Draw_Cell(Cell* cell, vector<Vertex>);
+		void	Draw_Cell(Cell* cell, glm::vec2, glm::vec2);
 
 	private:
 		Cell				*view_cell;// The cell that currently contains the view
